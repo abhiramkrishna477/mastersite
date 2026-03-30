@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aigfox Originals - Project Showcase</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-white: #ffffff;
+            --primary-gray: #f4f4f5;
+            --accent-gray: #71717a;
+            --bg-black: #09090b;
+            --bg-card: rgba(24, 24, 27, 0.8);
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --border-color: #27272a;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-black);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Subtle animated background */
+        .bg-glow {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% -20%, #27272a 0%, #09090b 80%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .logo-img {
+            height: 60px;
+            margin-bottom: 20px;
+            filter: brightness(0) invert(1); /* Ensures logo is white if it's black */
+        }
+
+        h1 {
+            font-size: 38px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .add-work-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background-color: var(--primary-white);
+            color: var(--bg-black);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .add-work-btn:hover {
+            background-color: var(--primary-gray);
+            transform: translateY(-2px);
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 50px;
+        }
+
+        .project-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-card:hover {
+            border-color: var(--accent-gray);
+            background: rgba(39, 39, 42, 0.9);
+        }
+
+        .project-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .project-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            background: #18181b;
+        }
+
+        .project-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .project-notes {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .project-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .project-link {
+            color: var(--primary-white);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 1px solid transparent;
+        }
+
+        .project-link:hover {
+            border-bottom-color: var(--primary-white);
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #71717a;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .delete-btn:hover {
+            color: #ef4444;
+        }
+
+        /* Modal styling remains similar but with new theme colors */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center; align-items: center;
+        }
+
+        .modal-content {
+            background: #18181b;
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            background: #09090b;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-white);
+            color: var(--bg-black);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 60px 0;
+            color: var(--accent-gray);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+
+    <div class="container">
+        <header>
+            <img src="aigfox logo.png" alt="Aigfox Logo" class="logo-img">
+            <h1>Aigfox Originals</h1>
+            <p class="subtitle">Premium project showcase and digital archives.</p>
+            <button id="addWorkBtn" class="add-work-btn">
+                <i class="fas fa-plus"></i> Add New Original
+            </button>
+        </header>
+
+        <div id="projectsContainer" class="projects-grid"></div>
+
+        <div id="emptyState" class="footer" style="display:none;">
+            <p>No projects showcased yet.</p>
+        </div>
+
+        <footer class="footer">
+            <p>&copy; 2026 Aigfox Technologies. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <div id="addWorkModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">Add Project</h2>
+            <form id="addWorkForm">
+                <input type="text" id="projectTitle" class="form-input" placeholder="Project Name" required>
+                <input type="url" id="projectUrl" class="form-input" placeholder="Project URL" required>
+                <textarea id="projectNotes" class="form-textarea" placeholder="Brief description..."></textarea>
+                <button type="submit" class="btn-save">Save Project</button>
+                <button type="button" id="cancelBtn" class="delete-btn" style="width: 100%; margin-top: 15px;">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/+esm';
+        
+        // YOUR CONFIG
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aigfox Originals - Project Showcase</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-white: #ffffff;
+            --primary-gray: #f4f4f5;
+            --accent-gray: #71717a;
+            --bg-black: #09090b;
+            --bg-card: rgba(24, 24, 27, 0.8);
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --border-color: #27272a;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-black);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Subtle animated background */
+        .bg-glow {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% -20%, #27272a 0%, #09090b 80%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .logo-img {
+            height: 60px;
+            margin-bottom: 20px;
+            filter: brightness(0) invert(1); /* Ensures logo is white if it's black */
+        }
+
+        h1 {
+            font-size: 38px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .add-work-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background-color: var(--primary-white);
+            color: var(--bg-black);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .add-work-btn:hover {
+            background-color: var(--primary-gray);
+            transform: translateY(-2px);
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 50px;
+        }
+
+        .project-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-card:hover {
+            border-color: var(--accent-gray);
+            background: rgba(39, 39, 42, 0.9);
+        }
+
+        .project-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .project-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            background: #18181b;
+        }
+
+        .project-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .project-notes {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .project-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .project-link {
+            color: var(--primary-white);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 1px solid transparent;
+        }
+
+        .project-link:hover {
+            border-bottom-color: var(--primary-white);
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #71717a;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .delete-btn:hover {
+            color: #ef4444;
+        }
+
+        /* Modal styling remains similar but with new theme colors */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center; align-items: center;
+        }
+
+        .modal-content {
+            background: #18181b;
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            background: #09090b;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-white);
+            color: var(--bg-black);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 60px 0;
+            color: var(--accent-gray);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+
+    <div class="container">
+        <header>
+            <img src="aigfox logo.png" alt="Aigfox Logo" class="logo-img">
+            <h1>Aigfox Originals</h1>
+            <p class="subtitle">Premium project showcase and digital archives.</p>
+            <button id="addWorkBtn" class="add-work-btn">
+                <i class="fas fa-plus"></i> Add New Original
+            </button>
+        </header>
+
+        <div id="projectsContainer" class="projects-grid"></div>
+
+        <div id="emptyState" class="footer" style="display:none;">
+            <p>No projects showcased yet.</p>
+        </div>
+
+        <footer class="footer">
+            <p>&copy; 2026 Aigfox Technologies. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <div id="addWorkModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">Add Project</h2>
+            <form id="addWorkForm">
+                <input type="text" id="projectTitle" class="form-input" placeholder="Project Name" required>
+                <input type="url" id="projectUrl" class="form-input" placeholder="Project URL" required>
+                <textarea id="projectNotes" class="form-textarea" placeholder="Brief description..."></textarea>
+                <button type="submit" class="btn-save">Save Project</button>
+                <button type="button" id="cancelBtn" class="delete-btn" style="width: 100%; margin-top: 15px;">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/+esm';
+        
+        // YOUR CONFIG
+        const SUPABASE_URL = "https://jtpsnufycomhozsiegjh.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cHNudWZ5Y29taG96c2llZ2poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5OTI5NjAsImV4cCI6MjA3NzU2ODk2MH0.SsKcUAjkv4gsTKawOfN-KKzYRkUKoQZj-JZDo8liggc";
+        
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        // Logic for fetching/adding/deleting remains the same as your previous script...
+        // Just ensure you update the HTML injection in displayProjects() to match the new CSS classes!
+    </script>
+</body>
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        // Logic for fetching/adding/deleting remains the same as your previous script...
+        // Just ensure you update the HTML injection in displayProjects() to match the new CSS classes!
+    </script>
+</body>
+</html>
