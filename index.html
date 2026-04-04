@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
     <style>
@@ -21,7 +20,9 @@
             --text-primary: #fafafa;
             --text-secondary: #a1a1aa;
             --border-color: #27272a;
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --success-green: #22c55e;
+            --error-red: #ef4444;
+            --info-blue: #3b82f6;
         }
 
         * {
@@ -39,12 +40,48 @@
             min-height: 100vh;
         }
 
-        /* Subtle animated background */
         .bg-glow {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at 50% -20%, #27272a 0%, #09090b 80%);
             z-index: -1;
+        }
+
+        /* Status Indicator */
+        .status-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 1000;
+        }
+
+        .status-light {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #71717a;
+            box-shadow: 0 0 5px rgba(113, 113, 122, 0.5);
+        }
+
+        .status-light.online {
+            background: var(--success-green);
+            box-shadow: 0 0 8px var(--success-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         .container {
@@ -61,7 +98,7 @@
         .logo-img {
             height: 60px;
             margin-bottom: 20px;
-            filter: brightness(0) invert(1); /* Ensures logo is white if it's black */
+            filter: brightness(0) invert(1);
         }
 
         h1 {
@@ -112,6 +149,13 @@
             transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
+            animation: fadeIn 0.5s ease forwards;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .project-card:hover {
@@ -129,280 +173,22 @@
         .project-icon {
             width: 40px;
             height: 40px;
-            border-radius: 4px;
+            border-radius: 8px;
             background: #18181b;
-        }
-
-        .project-title {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .project-notes {
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin-bottom: 20px;
-            flex-grow: 1;
-        }
-
-        .project-actions {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-        }
-
-        .project-link {
-            color: var(--primary-white);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            border-bottom: 1px solid transparent;
-        }
-
-        .project-link:hover {
-            border-bottom-color: var(--primary-white);
-        }
-
-        .delete-btn {
-            background: none;
-            border: none;
-            color: #71717a;
-            cursor: pointer;
-            font-size: 14px;
-            transition: color 0.2s;
-        }
-
-        .delete-btn:hover {
-            color: #ef4444;
-        }
-
-        /* Modal styling remains similar but with new theme colors */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 100;
-            justify-content: center; align-items: center;
-        }
-
-        .modal-content {
-            background: #18181b;
-            border: 1px solid var(--border-color);
-            padding: 32px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 450px;
-        }
-
-        .form-input, .form-textarea {
-            width: 100%;
-            padding: 12px;
-            background: #09090b;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: white;
-            margin-bottom: 16px;
-        }
-
-        .btn-save {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary-white);
-            color: var(--bg-black);
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 60px 0;
-            color: var(--accent-gray);
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-    <div class="bg-glow"></div>
-
-    <div class="container">
-        <header>
-            <img src="aigfox logo.png" alt="Aigfox Logo" class="logo-img">
-            <h1>Aigfox Originals</h1>
-            <p class="subtitle">Premium project showcase and digital archives.</p>
-            <button id="addWorkBtn" class="add-work-btn">
-                <i class="fas fa-plus"></i> Add New Original
-            </button>
-        </header>
-
-        <div id="projectsContainer" class="projects-grid"></div>
-
-        <div id="emptyState" class="footer" style="display:none;">
-            <p>No projects showcased yet.</p>
-        </div>
-
-        <footer class="footer">
-            <p>&copy; 2026 Aigfox Technologies. All rights reserved.</p>
-        </footer>
-    </div>
-
-    <div id="addWorkModal" class="modal">
-        <div class="modal-content">
-            <h2 style="margin-bottom: 20px;">Add Project</h2>
-            <form id="addWorkForm">
-                <input type="text" id="projectTitle" class="form-input" placeholder="Project Name" required>
-                <input type="url" id="projectUrl" class="form-input" placeholder="Project URL" required>
-                <textarea id="projectNotes" class="form-textarea" placeholder="Brief description..."></textarea>
-                <button type="submit" class="btn-save">Save Project</button>
-                <button type="button" id="cancelBtn" class="delete-btn" style="width: 100%; margin-top: 15px;">Cancel</button>
-            </form>
-        </div>
-    </div>
-
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/+esm';
-        
-        // YOUR CONFIG
-        <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aigfox Originals - Project Showcase</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-
-    <style>
-        :root {
-            --primary-white: #ffffff;
-            --primary-gray: #f4f4f5;
-            --accent-gray: #71717a;
-            --bg-black: #09090b;
-            --bg-card: rgba(24, 24, 27, 0.8);
-            --text-primary: #fafafa;
-            --text-secondary: #a1a1aa;
-            --border-color: #27272a;
-            --glass-border: rgba(255, 255, 255, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-black);
-            color: var(--text-primary);
-            line-height: 1.7;
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
-
-        /* Subtle animated background */
-        .bg-glow {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% -20%, #27272a 0%, #09090b 80%);
-            z-index: -1;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        header {
-            text-align: center;
-            padding: 40px 0;
-        }
-
-        .logo-img {
-            height: 60px;
-            margin-bottom: 20px;
-            filter: brightness(0) invert(1); /* Ensures logo is white if it's black */
-        }
-
-        h1 {
-            font-size: 38px;
-            font-weight: 700;
-            letter-spacing: -1px;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
+            justify-content: center;
             font-size: 18px;
             color: var(--text-secondary);
-            margin-bottom: 30px;
-        }
-
-        .add-work-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 24px;
-            background-color: var(--primary-white);
-            color: var(--bg-black);
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-
-        .add-work-btn:hover {
-            background-color: var(--primary-gray);
-            transform: translateY(-2px);
-        }
-
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 24px;
-            margin-top: 50px;
-        }
-
-        .project-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .project-card:hover {
-            border-color: var(--accent-gray);
-            background: rgba(39, 39, 42, 0.9);
-        }
-
-        .project-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .project-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 4px;
-            background: #18181b;
         }
 
         .project-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .project-notes {
@@ -416,40 +202,79 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-top: auto;
+            gap: 10px;
         }
 
         .project-link {
             color: var(--primary-white);
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             border-bottom: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .project-link:hover {
             border-bottom-color: var(--primary-white);
         }
 
-        .delete-btn {
+        .action-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
             background: none;
             border: none;
             color: #71717a;
             cursor: pointer;
             font-size: 14px;
-            transition: color 0.2s;
+            transition: all 0.2s;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .delete-btn:hover {
-            color: #ef4444;
+        .icon-btn:hover {
+            color: var(--primary-white);
         }
 
-        /* Modal styling remains similar but with new theme colors */
+        .icon-btn.delete:hover {
+            color: var(--error-red);
+        }
+
+        .icon-btn.edit:hover {
+            color: var(--info-blue);
+        }
+
+        /* Order controls on card */
+        .order-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .project-card:hover .order-controls {
+            opacity: 1;
+        }
+
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 100;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
             justify-content: center; align-items: center;
         }
 
@@ -458,7 +283,7 @@
             border: 1px solid var(--border-color);
             padding: 32px;
             border-radius: 12px;
-            width: 100%;
+            width: 90%;
             max-width: 450px;
         }
 
@@ -470,6 +295,12 @@
             border-radius: 6px;
             color: white;
             margin-bottom: 16px;
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-gray);
         }
 
         .btn-save {
@@ -481,6 +312,40 @@
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-save:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Toast Notifications */
+        #notification-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000;
+        }
+
+        .toast {
+            background: #18181b;
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .footer {
@@ -489,14 +354,34 @@
             color: var(--accent-gray);
             font-size: 14px;
         }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-black);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
     </style>
 </head>
 <body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="status-light online" style="width: 20px; height: 20px;"></div>
+    </div>
+
     <div class="bg-glow"></div>
+    
+    <div class="status-bar">
+        <div id="statusLight" class="status-light"></div>
+        <span id="statusText">Connecting...</span>
+    </div>
 
     <div class="container">
         <header>
-            <img src="aigfox logo.png" alt="Aigfox" class="logo-img">
+            <img src="https://api.dicebear.com/7.x/initials/svg?seed=Aigfox&backgroundColor=000000" alt="Aigfox" class="logo-img" onerror="this.src='https://via.placeholder.com/60?text=AFX'">
             <h1>Aigfox Originals</h1>
             <p class="subtitle">Premium project showcase and digital archives.</p>
             <button id="addWorkBtn" class="add-work-btn">
@@ -515,32 +400,258 @@
         </footer>
     </div>
 
+    <!-- Modal -->
     <div id="addWorkModal" class="modal">
         <div class="modal-content">
-            <h2 style="margin-bottom: 20px;">Add Project</h2>
+            <h2 id="modalTitle" style="margin-bottom: 20px;">Add Project</h2>
             <form id="addWorkForm">
                 <input type="text" id="projectTitle" class="form-input" placeholder="Project Name" required>
-                <input type="url" id="projectUrl" class="form-input" placeholder="Project URL" required>
-                <textarea id="projectNotes" class="form-textarea" placeholder="Brief description..."></textarea>
-                <button type="submit" class="btn-save">Save Project</button>
+                <input type="url" id="projectUrl" class="form-input" placeholder="Project URL (https://...)" required>
+                <textarea id="projectNotes" class="form-textarea" rows="4" placeholder="Brief description..."></textarea>
+                <button type="submit" id="saveBtn" class="btn-save">Save Project</button>
                 <button type="button" id="cancelBtn" class="delete-btn" style="width: 100%; margin-top: 15px;">Cancel</button>
             </form>
         </div>
     </div>
 
+    <div id="notification-container"></div>
+
     <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/+esm';
-        
-        // YOUR CONFIG
-        const SUPABASE_URL = "https://jtpsnufycomhozsiegjh.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cHNudWZ5Y29taG96c2llZ2poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5OTI5NjAsImV4cCI6MjA3NzU2ODk2MH0.SsKcUAjkv4gsTKawOfN-KKzYRkUKoQZj-JZDo8liggc";
-        
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Logic for fetching/adding/deleting remains the same as your previous script...
-        // Just ensure you update the HTML injection in displayProjects() to match the new CSS classes!
-
+        // Firebase Configuration
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // UI Elements
+        const projectsContainer = document.getElementById('projectsContainer');
+        const emptyState = document.getElementById('emptyState');
+        const addWorkModal = document.getElementById('addWorkModal');
+        const addWorkBtn = document.getElementById('addWorkBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const addWorkForm = document.getElementById('addWorkForm');
+        const statusLight = document.getElementById('statusLight');
+        const statusText = document.getElementById('statusText');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const notificationContainer = document.getElementById('notification-container');
+        const modalTitle = document.getElementById('modalTitle');
+        const saveBtn = document.getElementById('saveBtn');
+
+        let currentUser = null;
+        let editingId = null;
+        let allProjects = [];
+
+        // Custom Notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}" 
+                   style="color: ${type === 'success' ? 'var(--success-green)' : 'var(--error-red)'}"></i>
+                <span>${message}</span>
+            `;
+            notificationContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize Auth
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth error:", error);
+                statusText.innerText = "Auth Failed";
+                statusLight.style.background = "var(--error-red)";
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                statusLight.classList.add('online');
+                statusText.innerText = "Live Connection";
+                loadingOverlay.style.opacity = '0';
+                setTimeout(() => loadingOverlay.style.display = 'none', 500);
+                loadProjects();
+            }
+        });
+
+        // Load Projects
+        function loadProjects() {
+            if (!currentUser) return;
+            const projectsRef = collection(db, 'artifacts', appId, 'public', 'data', 'projects');
+            
+            onSnapshot(projectsRef, (snapshot) => {
+                allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                // Sort by the 'order' field (descending for new items if order is missing)
+                allProjects.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                renderProjects();
+            }, (error) => {
+                console.error("Fetch error:", error);
+                showToast("Failed to sync data", "error");
+            });
+        }
+
+        function renderProjects() {
+            projectsContainer.innerHTML = '';
+            if (allProjects.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            allProjects.forEach((project, index) => {
+                const card = createProjectCard(project, index);
+                projectsContainer.appendChild(card);
+            });
+        }
+
+        function createProjectCard(project, index) {
+            const div = document.createElement('div');
+            div.className = 'project-card';
+            div.innerHTML = `
+                <div class="order-controls">
+                    <button class="icon-btn up-btn" title="Move Up"><i class="fas fa-chevron-up"></i></button>
+                    <button class="icon-btn down-btn" title="Move Down"><i class="fas fa-chevron-down"></i></button>
+                </div>
+                <div class="project-header">
+                    <div class="project-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <div class="project-title">${escapeHtml(project.title)}</div>
+                </div>
+                <div class="project-notes">${escapeHtml(project.notes || 'No description provided.')}</div>
+                <div class="project-actions">
+                    <a href="${project.url}" target="_blank" class="project-link">
+                        Live <i class="fas fa-external-link-alt" style="font-size: 10px;"></i>
+                    </a>
+                    <div class="action-group">
+                        <button class="icon-btn edit" data-id="${project.id}" title="Edit"><i class="fas fa-pen"></i></button>
+                        <button class="icon-btn delete" data-id="${project.id}" title="Delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+
+            // Up/Down Swap Logic
+            div.querySelector('.up-btn').onclick = () => swapOrder(index, index - 1);
+            div.querySelector('.down-btn').onclick = () => swapOrder(index, index + 1);
+
+            // Edit Logic
+            div.querySelector('.edit').onclick = () => {
+                editingId = project.id;
+                modalTitle.innerText = "Edit Project";
+                saveBtn.innerText = "Update Project";
+                document.getElementById('projectTitle').value = project.title;
+                document.getElementById('projectUrl').value = project.url;
+                document.getElementById('projectNotes').value = project.notes || "";
+                addWorkModal.style.display = 'flex';
+            };
+
+            // Delete Logic
+            div.querySelector('.delete').onclick = async () => {
+                if (confirm(`Remove "${project.title}"?`)) {
+                    try {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', project.id));
+                        showToast("Original deleted");
+                    } catch (e) { showToast("Delete failed", "error"); }
+                }
+            };
+
+            return div;
+        }
+
+        async function swapOrder(idx1, idx2) {
+            if (idx1 < 0 || idx2 < 0 || idx1 >= allProjects.length || idx2 >= allProjects.length) return;
+
+            const p1 = allProjects[idx1];
+            const p2 = allProjects[idx2];
+
+            // Assign numerical order if they don't have it
+            const order1 = p1.order !== undefined ? p1.order : idx1;
+            const order2 = p2.order !== undefined ? p2.order : idx2;
+
+            try {
+                const ref1 = doc(db, 'artifacts', appId, 'public', 'data', 'projects', p1.id);
+                const ref2 = doc(db, 'artifacts', appId, 'public', 'data', 'projects', p2.id);
+
+                // Simple swap
+                await updateDoc(ref1, { order: order2 });
+                await updateDoc(ref2, { order: order1 });
+            } catch (e) {
+                showToast("Swap failed", "error");
+            }
+        }
+
+        // Modal Handlers
+        addWorkBtn.onclick = () => {
+            editingId = null;
+            modalTitle.innerText = "Add Project";
+            saveBtn.innerText = "Save Project";
+            addWorkForm.reset();
+            addWorkModal.style.display = 'flex';
+        };
+
+        cancelBtn.onclick = () => addWorkModal.style.display = 'none';
+
+        addWorkForm.onsubmit = async (e) => {
+            e.preventDefault();
+            saveBtn.disabled = true;
+
+            const data = {
+                title: document.getElementById('projectTitle').value,
+                url: document.getElementById('projectUrl').value,
+                notes: document.getElementById('projectNotes').value,
+                updatedAt: serverTimestamp()
+            };
+
+            try {
+                const projectsRef = collection(db, 'artifacts', appId, 'public', 'data', 'projects');
+                
+                if (editingId) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', editingId), data);
+                    showToast("Project updated");
+                } else {
+                    // New project gets highest order + 1
+                    const maxOrder = allProjects.reduce((max, p) => Math.max(max, p.order || 0), 0);
+                    data.order = allProjects.length > 0 ? maxOrder + 1 : 0;
+                    data.createdAt = serverTimestamp();
+                    data.userId = currentUser.uid;
+                    await addDoc(projectsRef, data);
+                    showToast("New original added");
+                }
+                
+                addWorkModal.style.display = 'none';
+                addWorkForm.reset();
+            } catch (error) {
+                showToast("Save failed", "error");
+            } finally {
+                saveBtn.disabled = false;
+            }
+        };
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        window.onload = initAuth;
     </script>
 </body>
 </html>
