@@ -376,7 +376,7 @@
     
     <div class="status-bar">
         <div id="statusLight" class="status-light"></div>
-        <span id="statusText">Connecting...</span>
+        <span id="statusText">Connecting Supabase...</span>
     </div>
 
     <div class="container">
@@ -417,17 +417,16 @@
     <div id="notification-container"></div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/+esm';
 
-        // Firebase Configuration
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // --- CONFIGURATION ---
+        const SUPABASE_URL = "https://jtpsnufycomhozsiegjh.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0cHNudWZ5Y29taG96c2llZ2poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5OTI5NjAsImV4cCI6MjA3NzU2ODk2MH0.SsKcUAjkv4gsTKawOfN-KKzYRkUKoQZj-JZDo8liggc";
         
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // TABLE NAME YOU WANT TO USE
+        const TABLE_NAME = "links"; 
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // UI Elements
         const projectsContainer = document.getElementById('projectsContainer');
@@ -443,11 +442,9 @@
         const modalTitle = document.getElementById('modalTitle');
         const saveBtn = document.getElementById('saveBtn');
 
-        let currentUser = null;
         let editingId = null;
         let allProjects = [];
 
-        // Custom Notification
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = 'toast';
@@ -464,48 +461,47 @@
             }, 3000);
         }
 
-        // Initialize Auth
-        const initAuth = async () => {
+        async function init() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth error:", error);
-                statusText.innerText = "Auth Failed";
-                statusLight.style.background = "var(--error-red)";
-            }
-        };
-
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
+                statusText.innerText = `Connecting to ${TABLE_NAME}...`;
+                await loadProjects();
                 statusLight.classList.add('online');
-                statusText.innerText = "Live Connection";
+                statusText.innerText = "Supabase Live";
                 loadingOverlay.style.opacity = '0';
                 setTimeout(() => loadingOverlay.style.display = 'none', 500);
-                loadProjects();
-            }
-        });
 
-        // Load Projects
-        function loadProjects() {
-            if (!currentUser) return;
-            const projectsRef = collection(db, 'artifacts', appId, 'public', 'data', 'projects');
-            
-            onSnapshot(projectsRef, (snapshot) => {
-                allProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Real-time listener
+                supabase.channel('links_db_changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, () => {
+                    loadProjects();
+                })
+                .subscribe();
+
+            } catch (error) {
+                console.error("Supabase error:", error);
+                statusText.innerText = "Table Missing";
+                statusLight.style.background = "var(--error-red)";
+                loadingOverlay.style.display = 'none';
                 
-                // Sort by the 'order' field (descending for new items if order is missing)
-                allProjects.sort((a, b) => (a.order || 0) - (b.order || 0));
+                // Detailed error for the user to help them fix the SQL part
+                if (error.code === "PGRST205") {
+                    showToast(`Table "${TABLE_NAME}" not found. Run the SQL script in Supabase Editor!`, "error");
+                } else {
+                    showToast(`Supabase Error: ${error.message}`, "error");
+                }
+            }
+        }
 
-                renderProjects();
-            }, (error) => {
-                console.error("Fetch error:", error);
-                showToast("Failed to sync data", "error");
-            });
+        async function loadProjects() {
+            const { data, error } = await supabase
+                .from(TABLE_NAME)
+                .select('*')
+                .order('order', { ascending: true });
+
+            if (error) throw error;
+
+            allProjects = data || [];
+            renderProjects();
         }
 
         function renderProjects() {
@@ -525,6 +521,12 @@
         function createProjectCard(project, index) {
             const div = document.createElement('div');
             div.className = 'project-card';
+            
+            // Flexible naming fallback
+            const title = project.projectTitle || project.title || "Untitled";
+            const url = project.projectUrl || project.url || "#";
+            const notes = project.projectNotes || project.notes || "No description.";
+
             div.innerHTML = `
                 <div class="order-controls">
                     <button class="icon-btn up-btn" title="Move Up"><i class="fas fa-chevron-up"></i></button>
@@ -532,44 +534,44 @@
                 </div>
                 <div class="project-header">
                     <div class="project-icon">
-                        <i class="fas fa-rocket"></i>
+                        <i class="fas fa-link"></i>
                     </div>
-                    <div class="project-title">${escapeHtml(project.title)}</div>
+                    <div class="project-title">${escapeHtml(title)}</div>
                 </div>
-                <div class="project-notes">${escapeHtml(project.notes || 'No description provided.')}</div>
+                <div class="project-notes">${escapeHtml(notes)}</div>
                 <div class="project-actions">
-                    <a href="${project.url}" target="_blank" class="project-link">
-                        Live <i class="fas fa-external-link-alt" style="font-size: 10px;"></i>
+                    <a href="${url}" target="_blank" class="project-link">
+                        Open Link <i class="fas fa-external-link-alt" style="font-size: 10px;"></i>
                     </a>
                     <div class="action-group">
-                        <button class="icon-btn edit" data-id="${project.id}" title="Edit"><i class="fas fa-pen"></i></button>
-                        <button class="icon-btn delete" data-id="${project.id}" title="Delete"><i class="fas fa-trash"></i></button>
+                        <button class="icon-btn edit" title="Edit"><i class="fas fa-pen"></i></button>
+                        <button class="icon-btn delete" title="Delete"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             `;
 
-            // Up/Down Swap Logic
             div.querySelector('.up-btn').onclick = () => swapOrder(index, index - 1);
             div.querySelector('.down-btn').onclick = () => swapOrder(index, index + 1);
 
-            // Edit Logic
             div.querySelector('.edit').onclick = () => {
                 editingId = project.id;
-                modalTitle.innerText = "Edit Project";
-                saveBtn.innerText = "Update Project";
-                document.getElementById('projectTitle').value = project.title;
-                document.getElementById('projectUrl').value = project.url;
-                document.getElementById('projectNotes').value = project.notes || "";
+                modalTitle.innerText = "Edit Link";
+                saveBtn.innerText = "Update Link";
+                document.getElementById('projectTitle').value = title;
+                document.getElementById('projectUrl').value = url;
+                document.getElementById('projectNotes').value = (notes === "No description.") ? "" : notes;
                 addWorkModal.style.display = 'flex';
             };
 
-            // Delete Logic
             div.querySelector('.delete').onclick = async () => {
-                if (confirm(`Remove "${project.title}"?`)) {
-                    try {
-                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', project.id));
-                        showToast("Original deleted");
-                    } catch (e) { showToast("Delete failed", "error"); }
+                if (confirm(`Delete "${title}"?`)) {
+                    const { error } = await supabase.from(TABLE_NAME).delete().eq('id', project.id);
+                    if (!error) {
+                        showToast("Removed");
+                        loadProjects();
+                    } else {
+                        showToast("Error deleting", "error");
+                    }
                 }
             };
 
@@ -578,31 +580,23 @@
 
         async function swapOrder(idx1, idx2) {
             if (idx1 < 0 || idx2 < 0 || idx1 >= allProjects.length || idx2 >= allProjects.length) return;
-
             const p1 = allProjects[idx1];
             const p2 = allProjects[idx2];
 
-            // Assign numerical order if they don't have it
-            const order1 = p1.order !== undefined ? p1.order : idx1;
-            const order2 = p2.order !== undefined ? p2.order : idx2;
+            const { error: err1 } = await supabase.from(TABLE_NAME).update({ order: idx2 }).eq('id', p1.id);
+            const { error: err2 } = await supabase.from(TABLE_NAME).update({ order: idx1 }).eq('id', p2.id);
 
-            try {
-                const ref1 = doc(db, 'artifacts', appId, 'public', 'data', 'projects', p1.id);
-                const ref2 = doc(db, 'artifacts', appId, 'public', 'data', 'projects', p2.id);
-
-                // Simple swap
-                await updateDoc(ref1, { order: order2 });
-                await updateDoc(ref2, { order: order1 });
-            } catch (e) {
-                showToast("Swap failed", "error");
+            if (err1 || err2) {
+                showToast("Cannot reorder. Does 'order' column exist?", "error");
+            } else {
+                loadProjects();
             }
         }
 
-        // Modal Handlers
         addWorkBtn.onclick = () => {
             editingId = null;
-            modalTitle.innerText = "Add Project";
-            saveBtn.innerText = "Save Project";
+            modalTitle.innerText = "Add Link";
+            saveBtn.innerText = "Save Link";
             addWorkForm.reset();
             addWorkModal.style.display = 'flex';
         };
@@ -613,45 +607,42 @@
             e.preventDefault();
             saveBtn.disabled = true;
 
-            const data = {
-                title: document.getElementById('projectTitle').value,
-                url: document.getElementById('projectUrl').value,
-                notes: document.getElementById('projectNotes').value,
-                updatedAt: serverTimestamp()
+            const payload = {
+                projectTitle: document.getElementById('projectTitle').value,
+                projectUrl: document.getElementById('projectUrl').value,
+                projectNotes: document.getElementById('projectNotes').value,
             };
 
             try {
-                const projectsRef = collection(db, 'artifacts', appId, 'public', 'data', 'projects');
-                
                 if (editingId) {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', editingId), data);
-                    showToast("Project updated");
+                    const { error } = await supabase.from(TABLE_NAME).update(payload).eq('id', editingId);
+                    if (error) throw error;
+                    showToast("Updated!");
                 } else {
-                    // New project gets highest order + 1
-                    const maxOrder = allProjects.reduce((max, p) => Math.max(max, p.order || 0), 0);
-                    data.order = allProjects.length > 0 ? maxOrder + 1 : 0;
-                    data.createdAt = serverTimestamp();
-                    data.userId = currentUser.uid;
-                    await addDoc(projectsRef, data);
-                    showToast("New original added");
+                    payload.order = allProjects.length;
+                    const { error } = await supabase.from(TABLE_NAME).insert([payload]);
+                    if (error) throw error;
+                    showToast("Saved!");
                 }
-                
                 addWorkModal.style.display = 'none';
                 addWorkForm.reset();
-            } catch (error) {
-                showToast("Save failed", "error");
+                loadProjects();
+            } catch (err) {
+                console.error(err);
+                showToast("Save Error: Ensure SQL table setup is correct.", "error");
             } finally {
                 saveBtn.disabled = false;
             }
         };
 
         function escapeHtml(text) {
+            if (!text) return "";
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        window.onload = initAuth;
+        window.onload = init;
     </script>
 </body>
 </html>
