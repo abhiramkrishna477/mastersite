@@ -160,6 +160,8 @@
             position: relative;
             cursor: grab; /* Shows users they can drag it */
             box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            /* Prevent user select so text doesn't highlight while dragging */
+            user-select: none; 
         }
 
         .project-card:active {
@@ -171,6 +173,12 @@
             opacity: 0.4;
             background: var(--primary-gray);
             border: 2px dashed var(--accent-gray);
+        }
+
+        /* Add a style for the dragging state to give tactile feedback */
+        .sortable-drag {
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            transform: scale(1.02);
         }
 
         @keyframes fadeIn {
@@ -561,6 +569,13 @@
             sortableInstance = new Sortable(projectsContainer, {
                 animation: 200,
                 ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                
+                // MOBILE SCROLL FIX:
+                delay: 200, // wait 200ms before initiating a drag
+                delayOnTouchOnly: true, // Only apply the delay to touch devices (desktop works normally)
+                touchStartThreshold: 5, // Allow user to swipe slightly (5px) before cancelling drag and switching to scroll
+                
                 onEnd: async function (evt) {
                     if (evt.oldIndex === evt.newIndex) return; // Didn't change position
 
@@ -615,6 +630,7 @@
 
             // Note: Stop propagation on buttons so clicking them doesn't trigger a drag
             div.querySelector('.edit').addEventListener('mousedown', (e) => e.stopPropagation());
+            div.querySelector('.edit').addEventListener('touchstart', (e) => e.stopPropagation(), {passive: true});
             div.querySelector('.edit').onclick = () => {
                 editingId = project.id;
                 modalTitle.innerText = "Edit Link";
@@ -626,6 +642,7 @@
             };
 
             div.querySelector('.delete').addEventListener('mousedown', (e) => e.stopPropagation());
+            div.querySelector('.delete').addEventListener('touchstart', (e) => e.stopPropagation(), {passive: true});
             div.querySelector('.delete').onclick = async () => {
                 if (confirm(`Delete "${title}"?`)) {
                     const { error } = await supabase.from(TABLE_NAME).delete().eq('id', project.id);
